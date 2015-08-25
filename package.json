@@ -5,7 +5,8 @@
   "repository": "https://github.com/lpio/server-node.git",
   "main": "./lib/Server.js",
   "dependencies": {
-    "backo": "^1.1.0"
+    "backo": "^1.1.0",
+    "lpio-multiplexer-js": "^0.1.0"
   },
   "devDependencies": {
     "eslint": "^0.24.1",
