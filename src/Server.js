@@ -7,8 +7,6 @@ import Request from './Request'
 export default class Server extends Emitter {
   static DEFAULTS = {
     ackTimeout: 10000,
-    keepAlive: undefined,
-    disconnectedAfter: 40000,
     adapter: new MemoryAdapter(),
     multiplex: undefined
   }

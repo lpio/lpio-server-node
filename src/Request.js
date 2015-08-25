@@ -10,10 +10,6 @@ export default class Request extends Emitter {
     CLIENT_ABORT: 4
   }
 
-  static DEFAULTS = {
-    keepAlive: 25000
-  }
-
   constructor(options) {
     super()
     this.options = options
