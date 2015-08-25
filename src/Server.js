@@ -1,4 +1,5 @@
 import Emitter from 'events'
+import uid from 'get-uid'
 
 import MemoryAdapter from './MemoryAdapter'
 import Request from './Request'
@@ -73,7 +74,7 @@ export default class Server extends Emitter {
     if (errMsg) return process.nextTick(callback.bind(null, new Error(errMsg)))
 
     let message = {
-      id: uid(),
+      id: String(uid()),
       type: 'user',
       ...options
     }
@@ -103,8 +104,4 @@ export default class Server extends Emitter {
     if (err) emitter.emit('error', err)
     return emitter
   }
-}
-
-function uid() {
-  return String(Math.round(Math.random() * Date.now()))
 }

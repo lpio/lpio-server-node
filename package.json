@@ -6,6 +6,7 @@
   "main": "./lib/Server.js",
   "dependencies": {
     "backo": "^1.1.0",
+    "get-uid": "^1.0.1",
     "lpio-multiplexer-js": "^0.1.0"
   },
   "devDependencies": {
