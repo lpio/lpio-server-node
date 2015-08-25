@@ -1,0 +1,27 @@
+{
+  "name": "lpio-server-node",
+  "version": "0.1.0",
+  "description": "Http long polling server.",
+  "repository": "https://github.com/lpio/server-node.git",
+  "main": "./lib/Server.js",
+  "dependencies": {
+    "backo": "^1.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^0.24.1",
+    "eslint-config-airbnb": "^0.0.6",
+    "eslint-config-ubergrape": "^0.1.1",
+    "eslint-plugin-react": "^2.7.0",
+    "babel": "^5.6.14",
+    "babel-core": "^5.6.20",
+    "babel-eslint": "^3.1.23",
+    "babel-loader": "^5.3.1"
+  },
+  "scripts": {
+    "all": "npm run lint && npm run build",
+    "lint": "eslint ./src",
+    "clean": "rm -fr ./lib/*",
+    "build": "npm run clean && babel src --out-dir lib"
+  },
+  "license": "MIT"
+}
