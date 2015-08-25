@@ -1,4 +1,6 @@
-export default class MemoryAdapter {
+import Emitter from 'events'
+
+export default class MemoryAdapter extends Emitter {
   static DEFAULTS = {
     // Max message lifetime.
     maxAge: 1000 * 60 * 60,
@@ -7,8 +9,10 @@ export default class MemoryAdapter {
   }
 
   constructor(options) {
+    super()
     this.options = {...MemoryAdapter.DEFAULTS, ...options}
     this.messages = {}
+    this.metas = {}
     let {cleanupInterval} = this.options
     if (cleanupInterval > 0) {
       this.cleanupIntervalId = setInterval(::this.cleanup, cleanupInterval)
@@ -45,14 +49,17 @@ export default class MemoryAdapter {
     }
 
     if (message.type === 'user') {
-      message.acks = []
-      message.timestamp = Date.now()
+      this.metas[message.id] = {
+        acks: [],
+        timestamp: Date.now()
+      }
       this.messages[message.id] = message
+      // Message has been theoretically saved to the DB.
       this.emit(`message:${message.recipient}`, message)
     }
     else if (message.type === 'ack' && this.messages[message.id]) {
-      this.messages[message.id].acks.push(message)
-      this.emit(`ack:${message.id}`)
+      this.metas[message.id].acks.push(message)
+      this.emit(`ack:${message.id}`, message)
     }
 
     process.nextTick(callback)
@@ -66,11 +73,13 @@ export default class MemoryAdapter {
   get(recipient, client, callback) {
     let messages = []
 
+    let clientMatch = ack => ack.client === client
+
     Object.keys(this.messages).forEach(id => {
       let message = this.messages[id]
       if (message.recipient === recipient) {
         // Only return this message if this client didn't get it already.
-        let hasAck = message.acks.some(ack => ack.client === client)
+        let hasAck = this.metas[message.id].acks.some(clientMatch)
         if (!hasAck) messages.push(message)
       }
     })
@@ -93,8 +102,9 @@ export default class MemoryAdapter {
     let now = Date.now()
     Object.keys(this.messages).forEach(id => {
       let message = this.messages[id]
-      if (message.timestamp + this.options.maxAge < now) {
+      if (this.metas[message.id].timestamp + this.options.maxAge < now) {
         delete this.messages[id]
+        delete this.metas[id]
       }
     })
   }
