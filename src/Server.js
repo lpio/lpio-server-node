@@ -20,6 +20,11 @@ export default class Server extends Emitter {
     this.requests = {}
   }
 
+  /**
+   * Open a request.
+   *
+   * @api public
+   */
   open({user, client, messages}) {
     let err
     if (!user) err = new Error('User undefined.')
@@ -41,6 +46,8 @@ export default class Server extends Emitter {
 
   /**
    * Closes a request for the passed client.
+   *
+   * @api public
    */
   close(client, state = Request.CLIENT_ABORT) {
     let req = this.requests[client]
@@ -50,6 +57,8 @@ export default class Server extends Emitter {
 
   /**
    * Destroy the server.
+   *
+   * @api public
    */
   destroy() {
     Object.keys(this.requests).forEach(client => {
@@ -64,6 +73,8 @@ export default class Server extends Emitter {
 
   /**
    * Push a message to the client.
+   *
+   * @api public
    */
   send(options, callback) {
     let errMsg

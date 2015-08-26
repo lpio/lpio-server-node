@@ -23,6 +23,8 @@ export default class MemoryAdapter extends Emitter {
    * Save the message, emit event.
    * If message is an array, all messages will be dispached. Only first error
    * will be passed to callback.
+   *
+   * @api public
    */
   dispatch(message, callback) {
     if (Array.isArray(message)) {
@@ -69,6 +71,8 @@ export default class MemoryAdapter extends Emitter {
 
   /**
    * Get all new messages for the recipient for a specific client.
+   *
+   * @api public
    */
   get(recipient, client, callback) {
     let messages = []
@@ -88,6 +92,11 @@ export default class MemoryAdapter extends Emitter {
     return this
   }
 
+  /**
+   * Desrpy adapter.
+   *
+   * @api public
+   */
   destroy() {
     clearInterval(this.cleanupIntervalId)
     this.removeAllListeners()
@@ -97,6 +106,8 @@ export default class MemoryAdapter extends Emitter {
 
   /**
    * Cleanup cache.
+   *
+   * @api private
    */
   cleanup() {
     let now = Date.now()
