@@ -2,4 +2,4 @@
 
 [Spec](https://github.com/lpio/lpio-spec)
 
-[Example](https://github.com/lpio/lpio-examples/basic-node)
+[Examples](https://github.com/lpio/lpio-examples)
