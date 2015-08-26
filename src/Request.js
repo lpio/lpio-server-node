@@ -1,5 +1,5 @@
 import Emitter from 'events'
-import Multiplexer from 'lpio-multiplexer-js'
+import Multiplexer from 'lpio-multiplexer'
 
 export default class Request {
   static STATES = {

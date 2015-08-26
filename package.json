@@ -1,6 +1,6 @@
 {
   "name": "lpio-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Http long polling server.",
   "repository": "https://github.com/lpio/lpio-server-node.git",
   "main": "./lib/Server.js",
