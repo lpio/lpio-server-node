@@ -4,7 +4,7 @@ import uid from 'get-uid'
 import MemoryAdapter from './MemoryAdapter'
 import Request from './Request'
 
-export default class Server extends Emitter {
+export default class Server {
   static DEFAULTS = {
     ackTimeout: 10000,
     adapter: new MemoryAdapter(),
@@ -12,12 +12,12 @@ export default class Server extends Emitter {
   }
 
   constructor(options) {
-    super()
     this.options = {...Server.DEFAULTS, ...options}
     this.id = String(uid())
     this.adapter = this.options.adapter
     this.destroyed = false
     this.requests = {}
+    this.out = new Emitter()
   }
 
   /**
@@ -31,17 +31,19 @@ export default class Server extends Emitter {
     if (!client) err = new Error('Client undefined.')
     if (this.destroyed) err = new Error('Server is destroyed.')
 
-    // For consistent chaining support.
-    if (err) return this.onError(err, new Emitter())
+    if (err) {
+      this.out.emit('error', err)
+      return this.out
+    }
 
     // If we have already an open request to this client - close it.
     if (this.requests[client]) this.close(client, Request.RECONNECT)
 
     let req = new Request({...this.options, user, client, serverId: this.id})
     this.requests[client] = req
-    req.once('close', () => this.onClose(client))
+    req.out.once('close', () => this.onClose(client))
     req.open(messages)
-    return req
+    return req.out
   }
 
   /**
@@ -65,7 +67,7 @@ export default class Server extends Emitter {
       this.close(client, Request.SERVER_DESTROYED)
     })
     this.adapter.destroy()
-    this.removeAllListeners()
+    this.out.removeAllListeners()
     this.destroyed = true
     return this
   }
@@ -84,7 +86,7 @@ export default class Server extends Emitter {
 
     let message = {
       id: String(uid()),
-      type: 'user',
+      type: 'data',
       ...options
     }
 
@@ -96,7 +98,7 @@ export default class Server extends Emitter {
         clearTimeout(timeoutId)
         callback()
       }
-      this.adapter.once(`ack:${message.id}`, onAck)
+      this.adapter.out.once(`ack:${message.id}`, onAck)
       timeoutId = setTimeout(() => {
         this.removeListener(`ack:${message.id}`, onAck)
         callback(new Error('Delivery timeout.'))
@@ -107,10 +109,5 @@ export default class Server extends Emitter {
   onClose(client) {
     // Don't use delete to not to make this object slow.
     this.requests[client] = undefined
-  }
-
-  onError(err, emitter = this) {
-    if (err) emitter.emit('error', err)
-    return emitter
   }
 }

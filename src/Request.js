@@ -1,9 +1,7 @@
 import Emitter from 'events'
 import Multiplexer from 'lpio-multiplexer-js'
 
-const ACKNOWLEDGABLE_TYPES = ['user', 'ping']
-
-export default class Request extends Emitter {
+export default class Request {
   static STATES = {
     RECONNECT: 0,
     NEW_MESSAGES: 1,
@@ -13,12 +11,12 @@ export default class Request extends Emitter {
   }
 
   constructor(options) {
-    super()
     this.options = options
     this.user = this.options.user
     this.client = this.options.client
     this.closed = false
     this.adapter = this.options.adapter
+    this.out = new Emitter()
     this.multiplexer = new Multiplexer(this.options.multiplex)
     this.multiplexer.on('drain', ::this.onDrain)
     this.onMessage = ::this.onMessage
@@ -29,14 +27,14 @@ export default class Request extends Emitter {
    */
   open(messages) {
     // Listen for new messages for the client.
-    this.adapter.on(`message:${this.user}`, this.onMessage)
+    this.adapter.out.on(`message:${this.user}`, this.onMessage)
 
     if (messages.length) {
       this.adapter.dispatch(messages, err => {
         if (err) return this.onError(err)
         // Server confirms messages reception after they have been saved to DB.
         messages.forEach(message => {
-          if (ACKNOWLEDGABLE_TYPES.indexOf(message.type) >= 0) {
+          if (message.type !== 'ack') {
             this.multiplexer.add({
               type: 'ack',
               id: message.id,
@@ -45,8 +43,8 @@ export default class Request extends Emitter {
               sender: 'server'
             })
           }
-          this.emit('message', message)
-          if (message.data) this.emit('data', message.data)
+          this.out.emit('message', message)
+          if (message.data) this.out.emit('data', message.data)
         })
         getMessages.call(this)
       })
@@ -65,9 +63,9 @@ export default class Request extends Emitter {
     if (this.closed) return
     this.closed = true
     this.multiplexer.destroy()
-    this.adapter.removeListener(`message:${this.user}`, this.onMessage)
-    this.emit('close', {state, messages})
-    this.removeAllListeners()
+    this.adapter.out.removeListener(`message:${this.user}`, this.onMessage)
+    this.out.emit('close', {state, messages})
+    this.out.removeAllListeners()
   }
 
   onMessage(message) {
@@ -80,7 +78,7 @@ export default class Request extends Emitter {
 
   onError(err) {
     if (!err) return
-    this.emit('error', err)
+    this.out.emit('error', err)
     this.close(Request.STATES.ERROR)
   }
 }
