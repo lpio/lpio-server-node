@@ -14,7 +14,7 @@ export default class Server extends Emitter {
   constructor(options) {
     super()
     this.options = {...Server.DEFAULTS, ...options}
-    this.id = uid()
+    this.id = String(uid())
     this.adapter = this.options.adapter
     this.destroyed = false
     this.requests = {}

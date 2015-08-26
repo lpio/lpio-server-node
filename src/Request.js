@@ -1,6 +1,8 @@
 import Emitter from 'events'
 import Multiplexer from 'lpio-multiplexer-js'
 
+const ACKNOWLEDGABLE_TYPES = ['user', 'ping']
+
 export default class Request extends Emitter {
   static STATES = {
     RECONNECT: 0,
@@ -34,16 +36,17 @@ export default class Request extends Emitter {
         if (err) return this.onError(err)
         // Server confirms messages reception after they have been saved to DB.
         messages.forEach(message => {
-          if (message.type !== 'user') return
-          this.multiplexer.add({
-            type: 'ack',
-            id: message.id,
-            client: this.options.serverId,
-            recipient: this.user,
-            sender: 'server'
-          })
+          if (ACKNOWLEDGABLE_TYPES.indexOf(message.type) >= 0) {
+            this.multiplexer.add({
+              type: 'ack',
+              id: message.id,
+              client: this.options.serverId,
+              recipient: this.user,
+              sender: 'server'
+            })
+          }
           this.emit('message', message)
-          this.emit('data', message.data)
+          if (message.data) this.emit('data', message.data)
         })
         getMessages.call(this)
       })
