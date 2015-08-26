@@ -1,5 +1,5 @@
 {
-  "name": "lpio-server-node",
+  "name": "lpio-server",
   "version": "0.1.0",
   "description": "Http long polling server.",
   "repository": "https://github.com/lpio/server-node.git",
@@ -7,7 +7,7 @@
   "dependencies": {
     "backo": "^1.1.0",
     "get-uid": "^1.0.1",
-    "lpio-multiplexer-js": "^0.1.0"
+    "lpio-multiplexer": "^0.1.0"
   },
   "devDependencies": {
     "eslint": "^0.24.1",
