@@ -1,6 +1,6 @@
 {
   "name": "lpio-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Http long polling server.",
   "repository": "https://github.com/lpio/lpio-server-node.git",
   "main": "./lib/Server.js",
@@ -23,7 +23,8 @@
     "all": "npm run lint && npm run build",
     "lint": "eslint ./src",
     "clean": "rm -fr ./lib/*",
-    "build": "npm run clean && babel src --out-dir lib"
+    "build": "npm run clean && babel src --out-dir lib",
+    "prepublish": "npm run all"
   },
   "license": "MIT"
 }
