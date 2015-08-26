@@ -24,6 +24,8 @@ export default class Request {
 
   /**
    * Open a request, messages are incomming.
+   *
+   * @api public
    */
   open(messages) {
     // Listen for new messages for the client.
@@ -59,6 +61,11 @@ export default class Request {
     }
   }
 
+  /**
+   * Close request - destroy everything related.
+   *
+   * @api public
+   */
   close(state = Request.STATES.RECONNECT, messages = []) {
     if (this.closed) return
     this.closed = true
