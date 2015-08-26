@@ -25,6 +25,11 @@ export default class Request {
   /**
    * Open a request, messages are incomming.
    *
+   * - subscribe new messages for the user while this request is alive, schedule them
+   * - dispatch recieved messages
+   * - schedule acks for received messages
+   * - get new messages for the client, schedule them
+   *
    * @api public
    */
   open(messages) {

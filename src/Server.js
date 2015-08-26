@@ -23,6 +23,10 @@ export default class Server {
   /**
    * Open a request.
    *
+   * - close existing requests for the client if any
+   * - create new request instance
+   * - call req.open(..)
+   *
    * @api public
    */
   open({user, client, messages}) {
@@ -74,7 +78,11 @@ export default class Server {
 
 
   /**
-   * Push a message to the client.
+   * Send a message to the client.
+   *
+   * - dispatch the message on adapter
+   * - subscribe ack message
+   * - call back with error when didn't receive ack within `ackTimeout`
    *
    * @api public
    */
