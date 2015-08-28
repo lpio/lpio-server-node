@@ -1,15 +1,8 @@
 import Emitter from 'events'
 import Multiplexer from 'lpio-multiplexer'
+import * as states from './states'
 
 export default class Request {
-  static STATES = {
-    RECONNECT: 0,
-    NEW_MESSAGES: 1,
-    ERROR: 2,
-    SERVER_DESTROYED: 3,
-    CLIENT_ABORT: 4
-  }
-
   constructor(options) {
     this.options = options
     this.user = this.options.user
@@ -71,7 +64,7 @@ export default class Request {
    *
    * @api public
    */
-  close(state = Request.STATES.RECONNECT, messages = []) {
+  close(state = states.RECONNECT, messages = []) {
     if (this.closed) return
     this.closed = true
     this.multiplexer.destroy()
@@ -85,12 +78,12 @@ export default class Request {
   }
 
   onDrain(messages) {
-    this.close(Request.STATES.NEW_MESSAGES, messages)
+    this.close(states.NEW_MESSAGES, messages)
   }
 
   onError(err) {
     if (!err) return
     this.out.emit('error', err)
-    this.close(Request.STATES.ERROR)
+    this.close(states.ERROR)
   }
 }

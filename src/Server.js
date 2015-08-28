@@ -3,6 +3,7 @@ import uid from 'get-uid'
 
 import MemoryAdapter from './MemoryAdapter'
 import Request from './Request'
+import * as states from './states'
 
 export default class Server {
   static DEFAULTS = {
@@ -41,7 +42,7 @@ export default class Server {
     }
 
     // If we have already an open request to this client - close it.
-    if (this.requests[client]) this.close(client, Request.RECONNECT)
+    if (this.requests[client]) this.close(client, states.RECONNECT)
 
     let req = new Request({...this.options, user, client, serverId: this.id})
     this.requests[client] = req
@@ -55,7 +56,7 @@ export default class Server {
    *
    * @api public
    */
-  close(client, state = Request.CLIENT_ABORT) {
+  close(client, state = states.CLIENT_ABORT) {
     let req = this.requests[client]
     if (req) req.close(state)
     return this
@@ -68,7 +69,7 @@ export default class Server {
    */
   destroy() {
     Object.keys(this.requests).forEach(client => {
-      this.close(client, Request.SERVER_DESTROYED)
+      this.close(client, states.SERVER_DESTROYED)
     })
     this.adapter.destroy()
     this.out.removeAllListeners()
