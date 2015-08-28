@@ -12,7 +12,10 @@ express()
     channel.once('close', function(data) {
       res.json(data)
     })
-    channel.once('error', console.log)
+    channel.once('error', function() {
+      // We don't log errors here to reduce the noise.
+      // Handle errors in the real application.
+    })
 
     req.once('close', function() {
       // Close internal object when user aborts request.

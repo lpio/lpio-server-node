@@ -5,6 +5,8 @@ import MemoryAdapter from './MemoryAdapter'
 import Request from './Request'
 import * as states from './states'
 
+const MESSAGE_TYPES = ['ping', 'ack', 'data']
+
 export default class Server {
   static DEFAULTS = {
     ackTimeout: 10000,
@@ -30,24 +32,21 @@ export default class Server {
    *
    * @api public
    */
-  open({user, client, messages}) {
-    let err
-    if (!user) err = new Error('User undefined.')
-    if (!client) err = new Error('Client undefined.')
-    if (this.destroyed) err = new Error('Server is destroyed.')
-
-    if (err) {
-      this.out.emit('error', err)
-      return this.out
-    }
+  open(params) {
+    if (!this.validate(params)) return this.out
 
     // If we have already an open request to this client - close it.
-    if (this.requests[client]) this.close(client, states.RECONNECT)
+    if (this.requests[params.client]) this.close(params.client, states.RECONNECT)
 
-    let req = new Request({...this.options, user, client, serverId: this.id})
-    this.requests[client] = req
-    req.out.once('close', () => this.onClose(client))
-    req.open(messages)
+    let req = new Request({
+      ...this.options,
+      user: params.user,
+      client: params.client,
+      serverId: this.id
+    })
+    this.requests[params.client] = req
+    req.out.once('close', () => this.onClose(params.client))
+    req.open(params.messages)
     return req.out
   }
 
@@ -115,8 +114,62 @@ export default class Server {
     })
   }
 
+  validate({user, client, messages}) {
+    let onError = err => {
+      process.nextTick(this.onError.bind(this, err))
+      return false
+    }
+
+    if (!user) return onError(new Error('Bad "user" param.'))
+    if (!client) return onError(new Error('Bad "client" param.'))
+    if (this.destroyed) return onError(new Error('Server is destroyed.'))
+
+    let err
+    messages.some(message => {
+      if (typeof message.id !== 'string') {
+        err = new Error('Bad message id.')
+      }
+      else if (typeof message.sender !== 'string') {
+        err = new Error('Bad message sender.')
+      }
+      else if (typeof message.client !== 'string') {
+        err = new Error('Bad message client.')
+      }
+      else if (typeof message.recipient !== 'string') {
+        err = new Error('Bad message recipient.')
+      }
+      else if (message.type === 'ack' && message.recipient !== 'server') {
+        err = new Error('Bad ack message recipient.')
+      }
+      else if (message.type === 'ping' && message.recipient !== 'server') {
+        err = new Error('Bad ping message recipient.')
+      }
+      else if (message.type === 'data' && !message.data) {
+        err = new Error('Bad message data.')
+      }
+      else if (MESSAGE_TYPES.indexOf(message.type) === -1) {
+        err = new Error('Bad message type.')
+      }
+
+      if (err) {
+        err.data = message
+        return true
+      }
+    })
+    return err ? onError(err) : true
+  }
+
   onClose(client) {
     // Don't use delete to not to make this object slow.
     this.requests[client] = undefined
+  }
+
+  onError(err) {
+    this.out.emit('error', err)
+    this.out.emit('close', {
+      state: states.ERROR,
+      error: err.message,
+      messages: []
+    })
   }
 }
