@@ -5,7 +5,7 @@ import MemoryAdapter from './MemoryAdapter'
 import Request from './Request'
 import * as states from './states'
 
-const MESSAGE_TYPES = ['ping', 'ack', 'data']
+const MESSAGE_TYPES = ['ack', 'data']
 
 export default class Server {
   static DEFAULTS = {
@@ -140,9 +140,6 @@ export default class Server {
       }
       else if (message.type === 'ack' && message.recipient !== 'server') {
         err = new Error('Bad ack message recipient.')
-      }
-      else if (message.type === 'ping' && message.recipient !== 'server') {
-        err = new Error('Bad ping message recipient.')
       }
       else if (message.type === 'data' && !message.data) {
         err = new Error('Bad message data.')

@@ -17,8 +17,8 @@ express()
       // Handle errors in the real application.
     })
 
+    // User aborted request.
     req.once('close', function() {
-      // Close internal object when user aborts request.
       lpServer.close(req.body.client)
     })
   })
