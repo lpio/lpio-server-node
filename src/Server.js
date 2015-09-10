@@ -5,13 +5,14 @@ import MemoryAdapter from './MemoryAdapter'
 import Request from './Request'
 import * as states from './states'
 
-const MESSAGE_TYPES = ['ack', 'data']
+const MESSAGE_TYPES = ['ack', 'data', 'option']
 
 export default class Server {
   static DEFAULTS = {
     ackTimeout: 10000,
     adapter: new MemoryAdapter(),
-    multiplex: undefined
+    multiplex: undefined,
+    getClientId: undefined
   }
 
   constructor(options) {
@@ -44,8 +45,8 @@ export default class Server {
       client: params.client,
       serverId: this.id
     })
-    this.requests[params.client] = req
-    req.out.once('close', () => this.onClose(params.client))
+    this.requests[req.client] = req
+    req.out.once('close', () => this.onClose(req.client))
     req.open(params.messages)
     return req.out
   }
@@ -114,14 +115,13 @@ export default class Server {
     })
   }
 
-  validate({user, client, messages}) {
+  validate({user, messages}) {
     let onError = err => {
       process.nextTick(this.onError.bind(this, err))
       return false
     }
 
     if (!user) return onError(new Error('Bad "user" param.'))
-    if (!client) return onError(new Error('Bad "client" param.'))
     if (this.destroyed) return onError(new Error('Server is destroyed.'))
 
     let err

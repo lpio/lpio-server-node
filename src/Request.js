@@ -26,6 +26,21 @@ export default class Request {
    * @api public
    */
   open(messages) {
+    if (!this.client) {
+      this.client = this.options.getClientId(this)
+      process.nextTick(() => {
+        this.close(states.NEW_MESSAGES, [{
+          type: 'option',
+          id: 'client',
+          data: this.client,
+          client: this.options.serverId,
+          recipient: this.user,
+          sender: 'server'
+        }])
+      })
+      return
+    }
+
     // Listen for new messages for the client.
     this.adapter.out.on(`message:${this.user}`, this.onMessage)
 

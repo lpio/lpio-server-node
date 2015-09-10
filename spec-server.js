@@ -2,7 +2,11 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var LpServer = require('./')
 
-var lpServer = new LpServer()
+var lpServer = new LpServer({
+  getClientId: function() {
+    return 'xxx'
+  }
+})
 
 express()
   .use(bodyParser.json())
