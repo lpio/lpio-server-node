@@ -41,8 +41,9 @@ export default class Server {
 
     let req = new Request({
       ...this.options,
-      user: params.user,
+      channels: params.channels,
       client: params.client,
+      req: params.req,
       serverId: this.id
     })
     this.requests[req.client] = req
@@ -90,7 +91,7 @@ export default class Server {
   send(options, callback) {
     let errMsg
     if (!options.data) errMsg = 'Data is undefined.'
-    if (!options.recipient) errMsg = 'Recipient is undefined.'
+    if (!options.channel) errMsg = 'Channel is undefined.'
     if (errMsg) return process.nextTick(callback.bind(null, new Error(errMsg)))
 
     let message = {
@@ -115,31 +116,22 @@ export default class Server {
     })
   }
 
-  validate({user, messages}) {
+  validate({channels, messages}) {
     let onError = err => {
       process.nextTick(this.onError.bind(this, err))
       return false
     }
 
-    if (!user) return onError(new Error('Bad "user" param.'))
     if (this.destroyed) return onError(new Error('Server is destroyed.'))
+    if (!channels || !channels.length) return onError(new Error('Empty channels.'))
 
     let err
     messages.some(message => {
       if (typeof message.id !== 'string') {
         err = new Error('Bad message id.')
       }
-      else if (typeof message.sender !== 'string') {
-        err = new Error('Bad message sender.')
-      }
-      else if (typeof message.client !== 'string') {
-        err = new Error('Bad message client.')
-      }
-      else if (typeof message.recipient !== 'string') {
-        err = new Error('Bad message recipient.')
-      }
-      else if (message.type === 'ack' && message.recipient !== 'server') {
-        err = new Error('Bad ack message recipient.')
+      else if (message.type !== 'ack' && typeof message.channel !== 'string') {
+        err = new Error('Bad message channel.')
       }
       else if (message.type === 'data' && !message.data) {
         err = new Error('Bad message data.')

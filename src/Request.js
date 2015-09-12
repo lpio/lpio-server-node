@@ -5,7 +5,7 @@ import * as states from './states'
 export default class Request {
   constructor(options) {
     this.options = options
-    this.user = this.options.user
+    this.channels = this.options.channels
     this.client = this.options.client
     this.closed = false
     this.adapter = this.options.adapter
@@ -18,7 +18,7 @@ export default class Request {
   /**
    * Open a request, messages are incomming.
    *
-   * - subscribe new messages for the user while this request is alive, schedule them
+   * - subscribe new messages for the channels while this request is alive, schedule them
    * - dispatch recieved messages
    * - schedule acks for received messages
    * - get new messages for the client, schedule them
@@ -27,51 +27,57 @@ export default class Request {
    */
   open(messages) {
     if (!this.client) {
-      this.client = this.options.getClientId(this)
+      this.client = this.options.getClientId(this.options.req)
       process.nextTick(() => {
         this.close(states.NEW_MESSAGES, [{
           type: 'option',
           id: 'client',
-          data: this.client,
-          client: this.options.serverId,
-          recipient: this.user,
-          sender: 'server'
+          data: this.client
         }])
       })
       return
     }
 
-    // Listen for new messages for the client.
-    this.adapter.out.on(`message:${this.user}`, this.onMessage)
-
-    if (messages.length) {
-      this.adapter.dispatch(messages, err => {
-        if (err) return this.onError(err)
-        // Server confirms messages reception after they have been saved to DB.
-        messages.forEach(message => {
-          if (message.type !== 'ack') {
-            this.multiplexer.add({
-              type: 'ack',
-              id: message.id,
-              client: this.options.serverId,
-              recipient: this.user,
-              sender: 'server'
-            })
-          }
-          this.out.emit('message', message)
-          if (message.data) this.out.emit('data', message.data)
-        })
-        getMessages.call(this)
-      })
-    }
-    else getMessages.call(this)
-
-    function getMessages() {
-      this.adapter.get(this.user, this.client, (err, newMessages) => {
+    let getMessages = () => {
+      this.adapter.get(this.channels, this.client, (err, newMessages) => {
         if (err) return this.onError(err)
         newMessages.forEach(this.onMessage)
       })
     }
+
+    // Listen for new messages for the client.
+    this.channels.forEach(channel => {
+      this.adapter.out.on(`message:${channel}`, this.onMessage)
+    })
+
+    if (messages.length) {
+      // Server confirms messages reception after they have been saved to DB.
+      messages.forEach(message => {
+        if (message.type === 'ack') {
+          message.client = this.client
+        }
+        else {
+          this.onMessage({
+            type: 'ack',
+            id: message.id
+          })
+          // This will avoid receiving this message by this client.
+          messages.push({
+            type: 'ack',
+            id: message.id,
+            client: this.client
+          })
+        }
+        this.out.emit('message', message)
+        if (message.type === 'data' && message.data) this.out.emit('data', message.data)
+      })
+
+      this.adapter.dispatch(messages, err => {
+        if (err) return this.onError(err)
+        getMessages()
+      })
+    }
+    else getMessages()
   }
 
   /**
@@ -83,7 +89,9 @@ export default class Request {
     if (this.closed) return
     this.closed = true
     this.multiplexer.destroy()
-    this.adapter.out.removeListener(`message:${this.user}`, this.onMessage)
+    this.channels.forEach(channel => {
+      this.adapter.out.removeListener(`message:${channel}`, this.onMessage)
+    })
     this.out.emit('close', {state, messages})
     this.out.removeAllListeners()
   }

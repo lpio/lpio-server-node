@@ -45,12 +45,12 @@ export default class MemoryAdapter {
       }
       this.messages[message.id] = message
       // Message has been theoretically saved to the DB, now we notify listeners.
-      this.out.emit(`message:${message.recipient}`, message)
+      this.emit(`message:${message.channel}`, message)
     }
     else if (message.type === 'ack' && this.messages[message.id]) {
       this.metas[message.id].acks.push(message)
       // Message has been theoretically saved to the DB, now we notify listeners.
-      this.out.emit(`ack:${message.id}`, message)
+      this.emit(`ack:${message.id}`, message)
     }
 
     process.nextTick(callback)
@@ -59,18 +59,18 @@ export default class MemoryAdapter {
   }
 
   /**
-   * Get all new messages for the recipient for a specific client.
+   * Get all new messages using channels. Use client to mark received messages.
    *
    * @api public
    */
-  get(recipient, client, callback) {
+  get(channels, client, callback) {
     let messages = []
 
     let clientMatch = ack => ack.client === client
 
     Object.keys(this.messages).forEach(id => {
       let message = this.messages[id]
-      if (message.recipient === recipient) {
+      if (channels.indexOf(message.channel) >= 0) {
         // Only return this message if this client didn't get it already.
         let hasAck = this.metas[message.id].acks.some(clientMatch)
         if (!hasAck) messages.push(message)
@@ -135,5 +135,14 @@ export default class MemoryAdapter {
         delete this.metas[id]
       }
     })
+  }
+
+  /**
+   * Async emit on the out channel.
+   *
+   * @api private
+   */
+  emit(event, data) {
+    process.nextTick(() => this.out.emit(event, data))
   }
 }
