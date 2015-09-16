@@ -29,11 +29,7 @@ export default class Request {
     if (!this.client) {
       this.client = this.options.getClientId(this.options.req)
       process.nextTick(() => {
-        this.close(states.NEW_MESSAGES, [{
-          type: 'option',
-          id: 'client',
-          data: this.client
-        }])
+        this.close(states.RECONNECT, undefined, {id: this.client})
       })
       return
     }
@@ -85,14 +81,14 @@ export default class Request {
    *
    * @api public
    */
-  close(state = states.RECONNECT, messages = []) {
+  close(state = states.RECONNECT, messages = [], set) {
     if (this.closed) return
     this.closed = true
     this.multiplexer.destroy()
     this.channels.forEach(channel => {
       this.adapter.out.removeListener(`message:${channel}`, this.onMessage)
     })
-    this.out.emit('close', {state, messages})
+    this.out.emit('close', {state, messages, set})
     this.out.removeAllListeners()
   }
 
