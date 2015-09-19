@@ -12,7 +12,8 @@ export default class Server {
     ackTimeout: 10000,
     adapter: new MemoryAdapter(),
     multiplex: undefined,
-    getClientId: undefined
+    getClientId: undefined,
+    responseTimeout: 20000
   }
 
   constructor(options) {

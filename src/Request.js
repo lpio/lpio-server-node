@@ -74,6 +74,10 @@ export default class Request {
       })
     }
     else getMessages()
+
+    setTimeout(() => {
+      this.close()
+    }, this.options.responseTimeout)
   }
 
   /**
