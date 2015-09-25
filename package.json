@@ -1,9 +1,12 @@
 {
   "name": "lpio-server",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Http long polling server.",
   "repository": "https://github.com/lpio/lpio-server-node.git",
   "main": "./lib/Server.js",
+  "bin": {
+    "lpio-spec-server": "./bin/spec-server"
+  },
   "dependencies": {
     "backo": "^1.1.0",
     "get-uid": "^1.0.1",
@@ -15,6 +18,7 @@
     "babel-eslint": "^3.1.23",
     "babel-loader": "^5.3.1",
     "body-parser": "^1.13.3",
+    "commander": "^2.8.1",
     "eslint": "^0.24.1",
     "eslint-config-airbnb": "^0.0.6",
     "eslint-config-ubergrape": "^0.1.1",
@@ -29,7 +33,7 @@
     "clean": "rm -fr ./lib/*",
     "build": "npm run clean && babel src --out-dir lib",
     "prepublish": "npm run all",
-    "test": "node ./spec-server & mocha ./node_modules/lpio-spec/test && pkill -f spec-server"
+    "test": "./bin/spec-server & mocha ./node_modules/lpio-spec/test && pkill -f spec-server"
   },
   "license": "MIT"
 }

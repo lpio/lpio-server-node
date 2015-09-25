@@ -57,7 +57,7 @@ export default class Request {
             type: 'ack',
             id: message.id
           })
-          // This will avoid receiving this message by this client.
+          // This will avoid receiving this message by this client who sent it.
           messages.push({
             type: 'ack',
             id: message.id,

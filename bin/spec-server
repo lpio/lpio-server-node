@@ -1,6 +1,12 @@
+#!/usr/bin/env node
+
+var program = require('commander')
 var express = require('express')
 var bodyParser = require('body-parser')
-var LpServer = require('./')
+var LpServer = require('..')
+
+program.option('-p, --port <port>', 'port', 3000)
+program.parse(process.argv)
 
 var lpServer = new LpServer({
   getClientId: function(req) {
@@ -10,7 +16,11 @@ var lpServer = new LpServer({
 
 express()
   .use(bodyParser.json())
-  .post('/lpio', function(req, res, next) {
+  .all('/lpio', function(req, res, next) {
+    res.set('Access-Control-Allow-Origin', '*')
+    res.set('Access-Control-Allow-Headers', 'Content-Type, LPIO-Client')
+    if (req.method === 'OPTIONS') return res.end()
+
     var channel = lpServer.open({
       messages: req.body.messages,
       client: req.get('LPIO-Client'),
@@ -32,4 +42,6 @@ express()
       lpServer.close(req.body.client)
     })
   })
-  .listen(3000)
+  .listen(program.port)
+
+  console.log('Spec server started at http://localhost:%s/lpio', program.port)
